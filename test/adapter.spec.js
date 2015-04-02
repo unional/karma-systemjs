@@ -5,9 +5,12 @@ describe('karmaSystemjsAdapter()', function () {
 		karma = {
 			start: jasmine.createSpy('start'),
 			config: {
-				systemjs: {}
+				systemjs: {
+					testSuiteModules: ['a', 'b', 'c']
+				}
 			},
-			files: {}
+			files: {},
+			error: jasmine.createSpy('error')
 		};
 		System = {
 			baseURL: '/base/app/',
@@ -24,61 +27,6 @@ describe('karmaSystemjsAdapter()', function () {
 		};
 		adapter = window.karmaSystemjsAdapter;
 	});
-
-	describe('createTestFileRegexp()', function () {
-
-		it('Builds a RegExp out of the testFileSuffix', function () {
-			var result = adapter.createTestFileRegexp('.meep.js');
-			expect(result.test('myApp.js')).toBe(false);
-			expect(result.test('myApp.test.js')).toBe(false);
-			expect(result.test('myApp.meep.js')).toBe(true);
-		});
-
-		it('Uses a common standard RegExp if no testFileSuffix is supplied', function () {
-			var result = adapter.createTestFileRegexp();
-			expect(result.test('myApp.js')).toBe(false);
-			expect(result.test('myApp.test.js')).toBe(true);
-			expect(result.test('myApp.meep.js')).toBe(false);
-		});
-	});
-
-  describe('getModuleNameFromPath()', function() {
-
-    it('Removes baseURL prefix and ".js" suffix from paths', function() {
-      expect(adapter.getModuleNameFromPath('/base/app/lib/include.js', System.baseURL)).toBe('lib/include');
-    });
-
-    it('Ignores non-.js extensions', function() {
-      expect(adapter.getModuleNameFromPath('/base/app/lib/include.es6', System.baseURL)).toBe('lib/include.es6');
-    });
-  });
-
-	describe('importTestSuites()', function () {
-
-		it('Filters out the test suites from the map of file names, and imports them as modules', function () {
-			var files = {
-				'/base/app/lib/include.js': 1,
-				'/base/app/src/thing.js': 1,
-				'/base/app/src/thing.spec.js': 1
-			};
-			var testFileRegexp = adapter.createTestFileRegexp();
-			var result = adapter.importTestSuites(System, files, testFileRegexp);
-			expect(result).toEqual([1]);
-			expect(System.import).toHaveBeenCalledWith('src/thing.spec');
-		});
-	});
-
-  describe('updatebaseURL()', function () {
-
-    it('Adds "/base" to the start of System.baseURL, after calling System.config()', function () {
-      expect(adapter.updatebaseURL('/app/')).toBe('/base/app/');
-    });
-
-    it('Replaces "./" with "/base/"', function () {
-      expect(adapter.updatebaseURL('./')).toBe('/base/');
-      expect(adapter.updatebaseURL('./app/')).toBe('/base/app/');
-    });
-  });
 
 	describe('run()', function () {
 
@@ -100,24 +48,12 @@ describe('karmaSystemjsAdapter()', function () {
 			expect(System.config).not.toHaveBeenCalled();
 		});
 
-		it('Adds "/base" to the start of System.baseURL, after calling System.config()', function () {
-			System.config.and.callFake(function (config) {
-				System.baseURL = config.baseURL;
-			});
-			karma.config.systemjs.config = {baseURL: '/app/'};
-			adapter.run(karma, System, Promise);
-			expect(System.baseURL).toBe('/base/app/');
-		});
-
 		it('Imports karma.files that match as test suites', function () {
-			karma.config.systemjs.testFileSuffix = '.test.js';
-			karma.files = {a: true, b: true, c: true};
-			spyOn(adapter, 'createTestFileRegexp').and.returnValue(123);
-			spyOn(adapter, 'importTestSuites').and.returnValue(456);
 			adapter.run(karma, System, Promise);
-			expect(adapter.createTestFileRegexp).toHaveBeenCalledWith(karma.config.systemjs.testFileSuffix);
-			expect(adapter.importTestSuites).toHaveBeenCalledWith(System, karma.files, 123);
-			expect(Promise.all).toHaveBeenCalledWith(456);
+			expect(System.import).toHaveBeenCalledWith('a');
+			expect(System.import).toHaveBeenCalledWith('b');
+			expect(System.import).toHaveBeenCalledWith('c');
+			expect(Promise.all).toHaveBeenCalledWith([1, 1, 1]);
 		});
 
 		it('Starts karma once all import promises have resolved', function () {
