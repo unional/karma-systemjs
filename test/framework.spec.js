@@ -7,12 +7,20 @@ describe('initSystemJs', function () {
 		config = {
 			files: [],
 			client: {},
-			systemjs: {}
+			systemjs: {
+				config: {}
+			}
 		};
-		logger = jasmine.createSpyObj('logger', ['create', 'debug', 'warn']);
+		logger = jasmine.createSpyObj('logger', ['create', 'debug', 'warn', 'error']);
 		logger.create.andCallFake(function() {
 			return logger;
 		});
+	});
+
+	it('Throws an error if there\'s no systemjs config specified in the karma config', function() {
+		config.systemjs.config = null;
+		expect(function() {initSystemJs(config, logger);}).toThrow();
+		expect(logger.error).toHaveBeenCalledWith('The SystemJS config must be specified in the karma config at `systemjs.configFile` and/or `systemjs.config`.');
 	});
 
 	it('Adds file patterns for traceur, es6-module-loader, and SystemJS', function () {
