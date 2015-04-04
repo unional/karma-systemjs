@@ -47,6 +47,7 @@ describe('initSystemJs', function () {
     config.systemjs.configFile = 'test/system.conf.js';
     initSystemJs(config, logger);
     expect(config.client.systemjs.config.transpiler).toBe('babel');
+    expect(config.client.systemjs.config.baseURL).toBe('/');
   });
 
 	it('Adds the plugin adapter to the end of the files list', function () {
