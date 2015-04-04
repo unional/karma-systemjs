@@ -2,3 +2,6 @@
 System.config({
   transpiler: 'babel'
 });
+System.config({
+  baseURL: '/'
+});
