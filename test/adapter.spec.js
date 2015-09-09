@@ -29,7 +29,7 @@ describe('karmaSystemjsAdapter()', function() {
   describe('createTestFileRegexp()', function() {
 
     it('Builds a RegExp out of the testFileSuffix', function() {
-      var result = adapter.createTestFileRegexp('.meep.js');
+      var result = adapter.createTestFileRegexp(undefined, '.meep.js');
       expect(result.test('myApp.js')).toBe(false);
       expect(result.test('myApp.test.js')).toBe(false);
       expect(result.test('myApp.meep.js')).toBe(true);
@@ -120,7 +120,7 @@ describe('karmaSystemjsAdapter()', function() {
       spyOn(adapter, 'createTestFileRegexp').and.returnValue(123);
       spyOn(adapter, 'importTestSuites').and.returnValue(456);
       adapter.run(karma, System, Promise);
-      expect(adapter.createTestFileRegexp).toHaveBeenCalledWith(karma.config.systemjs.testFileSuffix);
+      expect(adapter.createTestFileRegexp).toHaveBeenCalledWith(karma.config.systemjs.testFileRegex, karma.config.systemjs.testFileSuffix);
       expect(adapter.importTestSuites).toHaveBeenCalledWith(System, karma.files, 123);
       expect(Promise.all).toHaveBeenCalledWith(456);
     });
@@ -128,9 +128,11 @@ describe('karmaSystemjsAdapter()', function() {
     it('Imports karma.files that match as test regex', function() {
       karma.config.systemjs.testFileRegex = 'test';
       karma.files = {a: true, b: true, c: true};
+      var regex = adapter.createTestFileRegexp('test', undefined);
+
       spyOn(adapter, 'importTestSuites').and.returnValue(456);
       adapter.run(karma, System, Promise);
-      expect(adapter.importTestSuites).toHaveBeenCalledWith(System, karma.files, 'test');
+      expect(adapter.importTestSuites).toHaveBeenCalledWith(System, karma.files, regex);
       expect(Promise.all).toHaveBeenCalledWith(456);
     });
 
